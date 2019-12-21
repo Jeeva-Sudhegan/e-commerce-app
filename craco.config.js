@@ -6,7 +6,8 @@ module.exports = {
         options: {
             aliases:{
                 "@components": "src/components",
-                "@pages": "src/pages"
+                "@pages": "src/pages",
+                "@redux": "src/redux"
             }
         }
     }]

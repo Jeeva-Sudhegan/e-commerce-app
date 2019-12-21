@@ -1,15 +1,17 @@
-import React, { useState, useEffect, Component } from "react";
+import React, { useEffect, Component } from "react";
 import { Switch, Route } from "react-router-dom";
+import { connect } from "react-redux";
 import "./App.css";
 import HomePage from "@pages/homepage/homepage.component";
 import ShopPage from "@pages/shop/shop.component";
 import Header from "@components/header/header.component";
 import SignInAndSignUpPage from "@pages/sign-in-and-sign-up/sign-in-and-sign-up.component";
+import { setCurrentUser } from "@redux/user/user.action"
 import { auth, createUserProfileDocument } from "./firebase/firebase.utils";
 
 // eslint-disable-next-line
-function App1() {
-  const [currentUser, setCurrentUser] = useState(null);
+function App1(props) {
+  const {setCurrentUser} = props;
 
   useEffect(() => {
     let unsubscribe = auth.onAuthStateChanged(async userAuth => {
@@ -28,14 +30,9 @@ function App1() {
     // below line if for disabling eslint for next line
     // eslint-disable-next-line
   }, []);
-  // for testing whether rendering works or not 
-  useEffect(() => {
-    console.log(currentUser)
-  }, [currentUser]);
-
   return (
     <div>
-      <Header currentUser={currentUser} />
+      <Header />
       <Switch>
         <Route exact path="/" component={HomePage} />
         <Route path="/shop" component={ShopPage} />
@@ -47,44 +44,28 @@ function App1() {
 
 // eslint-disable-next-line
 class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      currentUser: null
-    };
-    this.unsubscribe = function() {};
-  }
   componentDidMount() {
+    const { setCurrentUser } = this.props;
     this.unsubscribe = auth.onAuthStateChanged(async userAuth => {
       if (userAuth) {
         const userRef = await createUserProfileDocument(userAuth);
         userRef.onSnapshot(snapshot => {
-          this.setState(
-            {
-              currentUser: {
+          setCurrentUser({
                 id: snapshot.id,
                 ...snapshot.data()
-              }
-            },
-            () => {
-              console.log(this.state.currentUser);
-            }
-          );
+          });
         });
       } else
-        this.setState({ currentUser: userAuth }, () =>
-          console.log(this.state.currentUser)
-        );
+        setCurrentUser(userAuth);
     });
   }
   componentWillUnmount() {
     this.unsubscribe();
   }
   render() {
-    const { currentUser } = this.state;
     return (
       <div>
-        <Header currentUser={currentUser} />
+        <Header />
         <Switch>
           <Route exact path="/" component={HomePage} />
           <Route path="/shop" component={ShopPage} />
@@ -95,4 +76,8 @@ class App extends Component {
   }
 }
 
-export default App;
+const mapDispatchToProps = dispatch => ({
+  setCurrentUser: user => dispatch(setCurrentUser(user))
+})
+
+export default connect(null, mapDispatchToProps)(App);
