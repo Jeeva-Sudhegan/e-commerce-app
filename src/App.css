@@ -9,4 +9,9 @@ a {
 
 *{
     box-sizing: border-box;
+    user-select: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
 }
