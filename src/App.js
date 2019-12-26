@@ -6,12 +6,15 @@ import HomePage from "@pages/homepage/homepage.component";
 import ShopPage from "@pages/shop/shop.component";
 import Header from "@components/header/header.component";
 import SignInAndSignUpPage from "@pages/sign-in-and-sign-up/sign-in-and-sign-up.component";
-import { setCurrentUser } from "@redux/user/user.action"
+import Checkout from "@pages/checkout/checkout.component";
+import { setCurrentUser } from "@redux/user/user.action";
 import { auth, createUserProfileDocument } from "./firebase/firebase.utils";
+import { selectCurrentUser } from "@redux/user/user.selectors";
+import { createStructuredSelector } from "reselect";
 
 // eslint-disable-next-line
 function App1(props) {
-  const {setCurrentUser} = props;
+  const { setCurrentUser } = props;
 
   useEffect(() => {
     let unsubscribe = auth.onAuthStateChanged(async userAuth => {
@@ -23,8 +26,7 @@ function App1(props) {
             ...snapshot.data()
           });
         });
-      } else
-        setCurrentUser(userAuth);
+      } else setCurrentUser(userAuth);
     });
     return () => unsubscribe();
     // below line if for disabling eslint for next line
@@ -36,6 +38,7 @@ function App1(props) {
       <Switch>
         <Route exact path="/" component={HomePage} />
         <Route path="/shop" component={ShopPage} />
+        <Route exact path="/checkout" component={Checkout} />
         <Route path="/signin" component={SignInAndSignUpPage} />
       </Switch>
     </div>
@@ -52,12 +55,11 @@ class App extends Component {
         const userRef = await createUserProfileDocument(userAuth);
         userRef.onSnapshot(snapshot => {
           setCurrentUser({
-                id: snapshot.id,
-                ...snapshot.data()
+            id: snapshot.id,
+            ...snapshot.data()
           });
         });
-      } else
-        setCurrentUser(userAuth);
+      } else setCurrentUser(userAuth);
     });
   }
   componentWillUnmount() {
@@ -71,19 +73,26 @@ class App extends Component {
         <Switch>
           <Route exact path="/" component={HomePage} />
           <Route path="/shop" component={ShopPage} />
-          <Route exact path="/signin" render={() => currentUser ? (<Redirect to="/" />) : (<SignInAndSignUpPage />) } />
+          <Route exact path="/checkout" component={Checkout} />
+          <Route
+            exact
+            path="/signin"
+            render={() =>
+              currentUser ? <Redirect to="/" /> : <SignInAndSignUpPage />
+            }
+          />
         </Switch>
       </div>
     );
   }
 }
 
-const mapStateToProps = ({user}) => ({
-  currentUser: user.currentUser
-})
+const mapStateToProps = createStructuredSelector({
+  currentUser: selectCurrentUser
+});
 
 const mapDispatchToProps = dispatch => ({
   setCurrentUser: user => dispatch(setCurrentUser(user))
-})
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);
